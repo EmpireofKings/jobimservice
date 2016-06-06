@@ -1,0 +1,17 @@
+mariadb-jbt:
+  image: mariadb
+  environment:
+   - MYSQL_ROOT_PASSWORD=""
+  ports:
+   - "3306:3306"
+  volumes:
+   - /home/fp/mysqldata/varlibmysql:/var/lib/mysql
+  command: mysqld --skip-innodb --default-storage-engine=myisam -uroot
+
+dsemantics:
+  image: dsemantics
+  links:
+   - mariadb-jbt:mariadb-jbt
+  ports:
+   - "9092:9092"
+  command: ./gradlew runRestBackend

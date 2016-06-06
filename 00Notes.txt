@@ -1,0 +1,87 @@
+#docker run --name mariadb-jbt -v /home/fp/mysqldata/varlibmysql:/var/lib/mysql -v /home/fp/mysqldata/jbt:/jbt -p 3306:3306 mariadb -e MYSQL_ROOT_PASSWORD= -it --entrypoint="/bin/bash"
+#docker run -v /var/lib/mysql:/var/lib/mysql -p 3306:3306 mariadb --name mariadb-jbt -e MYSQL_ROOT_PASSWORD=
+#docker run -it --entrypoint="/bin/bash" --link mariadb-jbt:mariadb-jbt -p 9092:9092 dsemantics
+
+#docker-compose up
+#docker exec -it jobimservice_mariadb-jbt_1 mysql -u root
+#
+
+#http://127.0.0.1:9092/jbt/similarTerms?term=exceptionally%23RB&backend=mysql_wikipedia_stanford
+
+
+1. Run MariaDB
+docker run -it --entrypoint="/bin/bash" -p 3306:3306 --name mariadb-jbt -v /home/fp/mysqldata/varlibmysql:/var/lib/mysql -v /home/fp/mysqldata/jbt:/jbt -e MYSQL_ROOT_PASSWORD= -d mariadb
+
+2. Login to container and prepare daemon
+docker exec -it mariadb-jbt /bin/bash
+chown -R mysql /var/lib/mysql/
+mysqld --skip-grant-tables
+
+3. Login from a third terminal and add user
+docker exec -it mariadb-jbt /bin/bash
+mysql -u root -p
+CREATE USER 'jbtuser'@'localhost' IDENTIFIED BY 'jbtpass';
+GRANT ALL PRIVILEGES ON *.* TO 'jbtuser'@'localhost' WITH GRANT OPTION;
+CREATE USER 'jbtuser'@'%' IDENTIFIED BY 'jbtpass';
+GRANT ALL PRIVILEGES ON *.* TO 'jbtuser'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+
+====================
+
+1. Run shell to extract config
+docker run -it --entrypoint="/bin/bash" -p 3306:3306 --name mariadb-jbt -v /home/fp/mysqldata/jbt:/jbt -e MYSQL_ROOT_PASSWORD= mariadb
+From external root shell (on host) in directory ~/mysqldata/varlibmysql:
+docker cp mariadb-jbt:/var/lib/mysql .
+
+2. Exit container and start new one with mapped directory
+exit
+docker rm mariadb-jbt
+docker run -it --entrypoint="/bin/bash" -p 3306:3306 --name mariadb-jbt -v /home/fp/mysqldata/varlibmysql:/var/lib/mysql -v /home/fp/mysqldata/jbt:/jbt -e MYSQL_ROOT_PASSWORD= -d mariadb
+
+Login from second terminal
+
+=================================
+
+1. Start mariadb
+docker run --name mariadb-jbt -e MYSQL_ROOT_PASSWORD=90nlkn891789mkasmlm2JJJLJ123gotohell -d mariadb:latest
+
+2. Connect to it
+docker run -it --link mariadb-jbt:mysql --rm mariadb sh -c 'exec mysql -h"$MYSQL_PORT_3306_TCP_ADDR" -P"$MYSQL_PORT_3306_TCP_PORT" -uroot -p"$MYSQL_ENV_MYSQL_ROOT_PASSWORD"'
+
+3. Create user with privileges
+CREATE USER 'jbtuser'@'localhost' IDENTIFIED BY 'jbtpass';
+GRANT ALL PRIVILEGES ON *.* TO 'jbtuser'@'localhost' WITH GRANT OPTION;
+CREATE USER 'jbtuser'@'%' IDENTIFIED BY 'jbtpass';
+GRANT ALL PRIVILEGES ON *.* TO 'jbtuser'@'%' WITH GRANT OPTION;
+
+4. From external root shell (on host) in directory ~/mysqldata/varlibmysql:
+cd mysqldata/varlibmysql/
+docker cp mariadb-jbt:/var/lib/mysql .
+
+5. Exit and remove container, restart it with mapped configuration
+docker stop mariadb-jbt
+docker rm mariadb-jbt
+docker run -it --entrypoint="/bin/bash" -p 3306:3306 --name mariadb-jbt -v /home/fp/mysqldata/varlibmysql:/var/lib/mysql -v /home/fp/mysqldata/jbt:/jbt -e MYSQL_ROOT_PASSWORD=90nlkn891789mkasmlm2JJJLJ123gotohell mariadb
+
+docker run -it --link mariadb-jbt:mysql --rm mariadb sh -c 'exec mysql -h"$MYSQL_PORT_3306_TCP_ADDR" -P"$MYSQL_PORT_3306_TCP_PORT" -ujbtuser
+
+======================================
+
+docker run -it --name mariadb-jbt -e MYSQL_ROOT_PASSWORD= -p 3306:3306 -v /home/fp/mysqldata/varlibmysql:/var/lib/mysql mariadb:5.5.49 /bin/bash
+chown -R mysql /var/lib/mysql
+chgrp -R mysql /var/lib/mysql
+mysql_install_db --user=mysql -ldata=/var/lib/mysql
+mysqld --skip-innodb --default-storage-engine=myisam -uroot
+
+.:: From second terminal
+docker exec -it mariadb-jbt /bin/bash
+mysql -u root -p
+CREATE USER 'jbtuser'@'localhost' IDENTIFIED BY 'jbtpass';
+GRANT ALL PRIVILEGES ON *.* TO 'jbtuser'@'localhost' WITH GRANT OPTION;
+CREATE USER 'jbtuser'@'%' IDENTIFIED BY 'jbtpass';
+GRANT ALL PRIVILEGES ON *.* TO 'jbtuser'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+
+.:: To start later
+mysqld --skip-innodb --default-storage-engine=myisam -uroot
+
